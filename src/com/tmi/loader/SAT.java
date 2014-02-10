@@ -14,6 +14,8 @@ import java.util.Timer;
 
 /**
  * Created by brdegenaars on 2/9/14.
+ *
+ * Entry for SAT. Allows for users to execute system actions after a specified amount of time.
  */
 public class SAT {
 
@@ -22,7 +24,8 @@ public class SAT {
     private static final int OS_X_HEIGHT = 100;
 
     private ArrayList<Component> components;
-    private JComboBox<String> actionSelection, actionTimerSelection;
+    private JComboBox<String> actionSelection;
+    private JSpinner actionTimerSelection;
     private Window window;
 
     public SAT() {
@@ -40,10 +43,8 @@ public class SAT {
         ActionSelectionActionListener actionSelectionActionListener = new ActionSelectionActionListener();
         JLabel actionSelectionLabel = new JLabel("Action : ");
 
-        String[] actionTimerOptions = new String[]{"Now","1min", "30min", "60min", "90min", "120min"};
-        actionTimerSelection = new JComboBox<String>(actionTimerOptions);
-        actionTimerSelection.setSelectedIndex(0);
-        actionTimerSelection.addActionListener(new SleepTimerActionListener());
+        SpinnerNumberModel actionTimerOptionsModel = new SpinnerNumberModel(30, 0, 120, 1);
+        actionTimerSelection = new JSpinner(actionTimerOptionsModel);
         JLabel actionTimerSelectionLabel = new JLabel("Sleep in : ");
 
         actionSelectionActionListener.setComponentsToAlter(new Component[]{actionTimerSelectionLabel});
@@ -77,7 +78,7 @@ public class SAT {
     }
 
     private String getActionInterval(){
-        return actionTimerSelection.getSelectedItem().toString();
+        return actionTimerSelection.getValue().toString();
     }
 
     private void addComponent(Component component){
@@ -116,7 +117,7 @@ public class SAT {
                 time = length * 60;
             }
 
-            confirm = JOptionPane.showConfirmDialog(window, "Go to sleep " + (length == 1 ? "in 1 minute?" : (length == 0 ? "now?" : "in " + length + "minutes?")));
+            confirm = JOptionPane.showConfirmDialog(window, "Go to sleep " + (length == 1 ? "in 1 minute?" : (length == 0 ? "now?" : "in " + length + " minutes?")));
 
             final String sleepCommand;
             String operatingSystem = System.getProperty("os.name");
