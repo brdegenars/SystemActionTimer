@@ -15,18 +15,24 @@ import java.util.Timer;
 /**
  * Created by brdegenaars on 2/9/14.
  */
-public class Loader {
+public class SAT {
 
     private static final int CONFIRMED = 0;
+    private static final int OS_X_WIDTH = 400;
+    private static final int OS_X_HEIGHT = 100;
 
     private ArrayList<Component> components;
     private JComboBox<String> actionSelection, actionTimerSelection;
     private Window window;
 
-    public Loader() {
+    public SAT() {
+        String operatingSystem = System.getProperty("os.name");
         this.components = new ArrayList<Component>();
 
-        Window window = new Window("Tuck Me In 0.0.1");
+        Window window = new Window("SAT - System Action Timer");
+        if (operatingSystem.equals("Mac OS X")){
+            window.setWindowSize(OS_X_WIDTH, OS_X_HEIGHT);
+        }
 
         String[] actionOptions = new String[]{"Sleep", "Shutdown"};
         actionSelection = new JComboBox<String>(actionOptions);
@@ -79,7 +85,7 @@ public class Loader {
     }
 
     public static void main(String[] args) {
-        new Loader();
+        new SAT();
     }
 
     public class ExecuteButtonActionListener implements ActionListener{
@@ -103,17 +109,31 @@ public class Loader {
         private void sleepFor(String sleepTimerValue){
 
             long length = 0, time = 0;
+            int confirm;
 
             if (!sleepTimerValue.equals("Now")){
                 length = Integer.valueOf(sleepTimerValue.replace("min", ""));
                 time = length * 60;
             }
 
+            confirm = JOptionPane.showConfirmDialog(window, "Go to sleep " + (length == 1 ? "in 1 minute?" : (length == 0 ? "now?" : "in " + length + "minutes?")));
+
             final String sleepCommand;
             String operatingSystem = System.getProperty("os.name");
 
+            sleepCommand = determineSystemSleepCommand(operatingSystem);
+
+            if (confirm == CONFIRMED){
+                executeTimedCommand(time, sleepCommand);
+            } else {
+                System.out.println("Sleep aborted!");
+            }
+        }
+
+        private String determineSystemSleepCommand(String operatingSystem) {
+            String sleepCommand;
             if (operatingSystem.contains(("Linux")) || operatingSystem.contains(("Mac"))) {
-                sleepCommand = "shutdown -h now";
+                sleepCommand = "pmset sleepnow";
             }
             else if ("Windows 7".equals(operatingSystem)) {
                 sleepCommand = "rundll32.exe powrprof.dll,SetSuspendState 0,1,0";
@@ -121,23 +141,7 @@ public class Loader {
             else {
                 throw new RuntimeException("Unsupported operating system.");
             }
-
-            Timer timer = new Timer();
-            timer.schedule(new TimerTask() {
-
-                @Override
-                public void run() {
-                    Runtime runtime = Runtime.getRuntime();
-                    try {
-                        runtime.exec(sleepCommand);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
-            }, time * 1000);
-
-            System.out.println("Going to sleep " + (length == 1 ? "in 1 minute" : (length == 0 ? "now" : length + " minutes")));
+            return sleepCommand;
         }
 
         private void shutdownIn(String shutdownTimerValue) throws IOException{
@@ -152,6 +156,20 @@ public class Loader {
             final String shutdownCommand;
             String operatingSystem = System.getProperty("os.name");
 
+            shutdownCommand = determineSystemShutdownCommand(operatingSystem);
+
+            String confirmation  = ("Shutdown " + (length == 1 ? "in 1 minute?" : (length == 0 ? "now?" : "in " + length + " minutes?")));
+            int confirm = JOptionPane.showConfirmDialog(window, confirmation);
+
+            if (confirm == CONFIRMED){
+                executeTimedCommand(time, shutdownCommand);
+            } else {
+                System.out.println("Shutdown aborted!");
+            }
+        }
+
+        private String determineSystemShutdownCommand(String operatingSystem) {
+            String shutdownCommand;
             if (operatingSystem.contains(("Linux")) || operatingSystem.contains(("Mac"))) {
                 shutdownCommand = "shutdown -h now";
             }
@@ -161,28 +179,24 @@ public class Loader {
             else {
                 throw new RuntimeException("Unsupported operating system.");
             }
+            return shutdownCommand;
+        }
 
-            String confirmation  = ("Shutting down in " + (length == 1 ? length + " minute" : length + " minutes"));
-            int confirm = JOptionPane.showConfirmDialog(window, confirmation);
+        private void executeTimedCommand(long time, final String systemCommand) {
+            Timer timer = new Timer();
+            timer.schedule(new TimerTask() {
 
-            if (confirm == CONFIRMED){
-                Timer timer = new Timer();
-                timer.schedule(new TimerTask() {
-
-                    @Override
-                    public void run() {
-                        Runtime runtime = Runtime.getRuntime();
-                        try {
-                            runtime.exec(shutdownCommand);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                @Override
+                public void run() {
+                    Runtime runtime = Runtime.getRuntime();
+                    try {
+                        runtime.exec(systemCommand);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
+                }
 
-                }, time * 1000);
-            } else {
-                System.out.println("Shutdown aborted!");
-            }
+            }, time * 1000);
         }
     }
 }

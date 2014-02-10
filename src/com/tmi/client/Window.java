@@ -2,12 +2,13 @@ package com.tmi.client;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Locale;
 
 /**
  * Created by brdegenaars on 2/9/14.
  */
 public class Window extends JFrame {
+
+    private int width = 320, height = 100;
 
     public Window(String title) throws HeadlessException {
         super(title);
@@ -21,8 +22,13 @@ public class Window extends JFrame {
         for (Component component : components){
             contentPane.add(component);
         }
-        this.setSize(320,100);
+        this.setSize(width, height);
 //        this.pack();
         this.setVisible(true);
+    }
+
+    public void setWindowSize(int width, int height){
+        this.width = width;
+        this.height = height;
     }
 }
